@@ -1,7 +1,6 @@
-import 'dart:convert';
+
 import 'dart:developer';
 import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:gas_vat/component/saved_data.dart';
@@ -34,10 +33,16 @@ class _LoginScreenState extends State<LoginScreen> {
     super.deactivate();
   }
 
+  /// done by AKIJ
+  TextEditingController _emailController = new TextEditingController();
+  TextEditingController _passwordController = new TextEditingController();
+  bool _isShowingPassword = false;
+
   @override
   Widget build(BuildContext context) {
     return SafeArea(
       child: Scaffold(
+
         bottomNavigationBar: Container(
           child: Row(
             children: [
@@ -112,11 +117,13 @@ class _LoginScreenState extends State<LoginScreen> {
             ],
           ),
         ),
+
         body: SingleChildScrollView(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.start,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+
               Container(
                 alignment: Alignment.center,
                 color: HexColor("#1D1A2F"),
@@ -125,12 +132,14 @@ class _LoginScreenState extends State<LoginScreen> {
                   color: Colors.white,
                 ),
               ),
+
               Container(
                 decoration: BoxDecoration(),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.start,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+
                     Padding(
                       padding: EdgeInsets.only(left: 48.0, top: 33),
                       child: Text(
@@ -141,6 +150,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             fontWeight: FontWeight.bold),
                       ),
                     ),
+
                     Padding(
                       padding: EdgeInsets.only(left: 48.0, top: 15),
                       child: Text(
@@ -151,6 +161,8 @@ class _LoginScreenState extends State<LoginScreen> {
                             fontWeight: FontWeight.w400),
                       ),
                     ),
+
+                    /*
                     Padding(
                       padding: EdgeInsets.only(left: 48.0, top: 25, right: 39),
                       child: TextField(
@@ -185,6 +197,75 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ),
                     ),
+                   */
+
+                    /// done by AKIJ
+                    Container(
+                      height: 80,
+                      padding: EdgeInsets.all(10),
+                      margin: EdgeInsets.only(left: 10, right: 10),
+                      child: TextFormField(
+                        controller: _emailController,
+                        decoration: InputDecoration(
+                          labelText: "Email/Phone",
+                          filled: true,
+                          fillColor: Colors.white,
+                          border: InputBorder.none,
+                          labelStyle: TextStyle(
+                            fontFamily: "",
+                            fontSize: 16,
+                          ),
+                          prefixIcon: Icon(
+                              Icons.account_circle,
+                              color: Colors.blue[800]
+                          ),
+                        ),
+                        validator: (value) {
+                          if (value!.isEmpty) return "User Id required.";
+                          return null;
+                        },
+                      ),
+                    ),
+
+                    Container(
+                      height: 80,
+                      padding: EdgeInsets.all(10),
+                      margin: EdgeInsets.only(left: 10, right: 10),
+                      child: TextFormField(
+                        controller: _passwordController,
+                        obscureText: !_isShowingPassword,
+                        decoration: InputDecoration(
+                          labelText: "Password",
+                          border: InputBorder.none,
+                          filled: true,
+                          fillColor: Colors.white,
+                          labelStyle: TextStyle(
+                            fontFamily: "",
+                            fontSize: 16,
+                          ),
+                          suffixIcon: IconButton(
+                            icon: Icon(!_isShowingPassword
+                                ? Icons.visibility
+                                : Icons.visibility_off,
+                                color: Colors.blue[800]),
+                            onPressed: () {
+                              setState(() {
+                                _isShowingPassword = !_isShowingPassword;
+                              });
+                            },
+                          ),
+                          prefixIcon:
+                          Icon(Icons.vpn_key, color: Colors.blue[800]),
+                        ),
+
+                        //empty value checking on text form field
+                        validator: (value) {
+                          if (value!.isEmpty) return "Password required.";
+                          return null;
+                        },
+                      ),
+                    ),
+
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       mainAxisAlignment: MainAxisAlignment.end,
@@ -202,6 +283,36 @@ class _LoginScreenState extends State<LoginScreen> {
                         )
                       ],
                     ),
+
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.only(top: 1),
+                          child: Text(
+                            "please contact",
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w400,
+                              color: HexColor("#1D1A2F"),
+                            ),
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.only(right: 36.0, top: 1),
+                          child: Text(
+                            " help@riddhosoft.com",
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w400,
+                              color: Colors.red,
+                            ),
+                          ),
+                        )
+                      ],
+                    ),
+
                   ],
                 ),
               ),
@@ -213,7 +324,7 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   void login() {
-    checkAPI(phone, password);
+    checkAPI(_emailController.text.toString(), _passwordController.text.toString());
   }
 
   Future<void> checkAPI(String _phone, String _password) async {
@@ -222,26 +333,22 @@ class _LoginScreenState extends State<LoginScreen> {
       'email': _phone,
       'password': _password,
     };
-
     try {
       final response = await http.post(
         Uri.parse("https://riddhosoft.com/api/v1/login"),
         body: jsonMap,
       );
-
       EasyLoading.dismiss();
       _loginRes = loginModelFromJson(response.body);
       if (_loginRes.userData!.status == "1") {
         _phone = _loginRes.userData!.email!;
         log("RESPONSE____${response.body}");
         await MyPrefs.setAuthCode("${_loginRes.accessToken}");
-        Navigator.of(context).pushReplacement(MaterialPageRoute(
-          builder: (context) => HomeScreen(),
+        Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context) => HomeScreen(),
         ));
       } else {
         EasyLoading.dismiss();
       }
-
       log(response.body);
     } on SocketException {
       EasyLoading.dismiss();

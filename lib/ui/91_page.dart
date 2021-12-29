@@ -1,10 +1,8 @@
 
 import 'dart:convert';
 import 'dart:developer';
-import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
-import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:gas_vat/component/saved_data.dart';
@@ -12,7 +10,6 @@ import 'package:gas_vat/custom_drawer/custom_drawer.dart';
 import 'package:gas_vat/model/invoice_create_res.dart';
 import 'package:gas_vat/model/invoice_show_res.dart';
 import 'package:gas_vat/model/oil_info_model.dart';
-import 'package:gas_vat/printer_page/printer_page.dart';
 import 'package:gas_vat/services/pdf_services.dart';
 import 'package:gas_vat/ui/95_page.dart';
 import 'package:gas_vat/ui/home_screen.dart';
@@ -22,18 +19,12 @@ import 'package:hexcolor/hexcolor.dart';
 import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
 import 'package:sunmi_printer_plus/sunmi_printer_plus.dart';
-import 'demoprint.dart';
-import 'diesel_screen.dart';
-import 'package:esc_pos_bluetooth/esc_pos_bluetooth.dart';
-import 'package:esc_pos_utils/esc_pos_utils.dart';
 
 
 class NightyOnePage extends StatefulWidget {
   final List<Datum>? list;
   final int selectedItem;
-
   const NightyOnePage({Key? key, required this.list,required this.selectedItem}) : super(key: key);
-
   @override
   _NightyOnePageState createState() => _NightyOnePageState();
 }
@@ -54,9 +45,7 @@ class _NightyOnePageState extends State<NightyOnePage> {
 
   @override
   void initState() {
-
-
-    /*currentItem=widget.selectedItem;
+    currentItem=widget.selectedItem;
     super.initState();
     _bindingPrinter().then((bool? isBind) async {
       _getPrinterStatus();
@@ -78,10 +67,8 @@ class _NightyOnePageState extends State<NightyOnePage> {
       setState(() {
         printBinded = isBind!;
       });
-    });*/
-
-
-    /*WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
+    });
+    WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
       _bindingPrinter().then( (bool? isBind) async => {
 
         if (isBind!) {
@@ -89,7 +76,7 @@ class _NightyOnePageState extends State<NightyOnePage> {
           _getPrinterMode(),
         }
       });
-    });*/
+    });
   }
 
   Future<bool?> _bindingPrinter() async {
@@ -313,8 +300,8 @@ class _NightyOnePageState extends State<NightyOnePage> {
                       // openPDF(context, file);
                       if(inputData>0){
                         print('check_print');
-                        Navigator.push(context, MaterialPageRoute(builder: (context) => DemoPrint()));
-                        //createInvoice();
+                        //Navigator.push(context, MaterialPageRoute(builder: (context) => DemoPrint()));
+                        createInvoice();
                       }else{
                         EasyLoading.showToast("Enter Valid ammount",toastPosition: EasyLoadingToastPosition.bottom);
                       }
@@ -397,7 +384,6 @@ class _NightyOnePageState extends State<NightyOnePage> {
     );
   }
 
-
   createInvoice() async {
     int id=widget.list!.elementAt(currentItem).id !=null?int.parse("${widget.list!.elementAt(currentItem).id}"):0;
     double price=double.parse(inputData.toString());
@@ -410,7 +396,6 @@ class _NightyOnePageState extends State<NightyOnePage> {
       'oilInfo_id': id,
       'amount': price
     };
-    
     print("object $id");
     String? token;
     await MyPrefs.getAuthCode().then((value) {
@@ -444,6 +429,7 @@ class _NightyOnePageState extends State<NightyOnePage> {
       EasyLoading.dismiss();
     }
   }
+
   getInvoice(int id) async {
     EasyLoading.show(maskType: EasyLoadingMaskType.clear);
     String? token;
@@ -473,6 +459,7 @@ class _NightyOnePageState extends State<NightyOnePage> {
       EasyLoading.dismiss();
     }
   }
+
   /// you can get printer status
   Future<void> _getPrinterStatus() async {
     try{
@@ -484,6 +471,7 @@ class _NightyOnePageState extends State<NightyOnePage> {
       log("_printerStatus Error");
     }
   }
+
   Future<void> _getPrinterMode() async {
     try{
       final PrinterMode mode = await SunmiPrinter.getPrinterMode();
@@ -492,6 +480,7 @@ class _NightyOnePageState extends State<NightyOnePage> {
       log("_getPrinterMode Error");
     }
   }
+
   Future<void> _printTicket(InvoiceShowRes res) async {
     EasyLoading.showToast("Printer Status: $_printerStatus",duration: Duration(milliseconds: 1000),toastPosition: EasyLoadingToastPosition.bottom);
     await Future.delayed(Duration(milliseconds: 800));
@@ -501,14 +490,16 @@ class _NightyOnePageState extends State<NightyOnePage> {
     var price =res.invoiceShow!.price;
     var sprice = price!.toStringAsFixed(2);
     var myliter=double.parse("${res.invoiceShow!.litter}").toStringAsFixed(2);
-  //  var ammount=double.parse("${res.invoiceShow!.amount}").toStringAsFixed(2);
+    var ammount=double.parse("${res.invoiceShow!.amount}").toStringAsFixed(2);
+    String mobileNo= "${res.adminInfo!.mobile}";
+    String address= "${res.adminInfo!.address}";
 
     var withoutvarprice=double.parse((price*double.parse(myliter)).toStringAsFixed(2));
     var vat=double.parse((withoutvarprice*double.parse("${res.invoiceShow!.vat}")/100).toStringAsFixed(2));
     var net=withoutvarprice+vat;
 
     try{
-      log("$sprice - $myliter - $withoutvarprice -$vat $net ");
+      log("$sprice - $myliter - $withoutvarprice -$vat $net");
      // log("_printerStatus"+_printerStatus.toString());
       if (_printerStatus == PrinterStatus.NORMAL) {
         // Enter into the transaction mode
@@ -521,7 +512,7 @@ class _NightyOnePageState extends State<NightyOnePage> {
         ByteData bytes2 = await rootBundle.load('assets/images/bar_code.jpg');
         final buffer2 = bytes2.buffer;
 
-      //  final imgData = base64.encode(Uint8List.view(buffer));
+       // final imgData = base64.encode(Uint8List.view(buffer));
        // SunmiPrinter.image(imgData);
 
         await SunmiPrinter.setAlignment(SunmiPrintAlign.CENTER);
@@ -530,7 +521,7 @@ class _NightyOnePageState extends State<NightyOnePage> {
 
 
         await SunmiPrinter.setAlignment(SunmiPrintAlign.CENTER);
-        await SunmiPrinter.printText('TIN 4493664979465698');
+        await SunmiPrinter.printText('C.R: 4493664979465698');
         await SunmiPrinter.printText('VAT 89744164');
         await SunmiPrinter.lineWrap(2);
 
@@ -541,7 +532,10 @@ class _NightyOnePageState extends State<NightyOnePage> {
         await SunmiPrinter.setAlignment(SunmiPrintAlign.CENTER);
         await SunmiPrinter.printText('Al Nahda Street, Cross Tahlia,');
         await SunmiPrinter.printText('Jeddah, Saudi Arabia.');
-        await SunmiPrinter.printText('Phone:54646464646');
+        /// done by AKIJ
+        await SunmiPrinter.printText('Amount: $ammount');
+        await SunmiPrinter.printText('Phone: $mobileNo');
+        await SunmiPrinter.printText('Address: $address');
         await SunmiPrinter.lineWrap(2);
 
         await SunmiPrinter.line();
@@ -572,9 +566,8 @@ class _NightyOnePageState extends State<NightyOnePage> {
           ColumnMaker(text: 'أمين الصندوق', align: SunmiPrintAlign.RIGHT),
         ]);
 
-
         await SunmiPrinter.setAlignment(SunmiPrintAlign.LEFT);
-        await SunmiPrinter.printText('Gas Type: ${res.invoiceShow!.name}');
+        await SunmiPrinter.printText('Gas Type: ${res.invoiceShow!.name}'.toUpperCase(), style: SunmiStyle(bold: true));
         await SunmiPrinter.lineWrap(1);
 
         await SunmiPrinter.setAlignment(SunmiPrintAlign.LEFT);
@@ -596,7 +589,7 @@ class _NightyOnePageState extends State<NightyOnePage> {
         await SunmiPrinter.lineWrap(1);
 
         await SunmiPrinter.setAlignment(SunmiPrintAlign.LEFT);
-        await SunmiPrinter.printText('Net Price: $net SAR',style:SunmiStyle(bold: true) );
+        await SunmiPrinter.printText('Net Price: $net SAR'.toUpperCase(),style:SunmiStyle(bold: true));
         await SunmiPrinter.lineWrap(4);
 
 
@@ -619,12 +612,10 @@ class _NightyOnePageState extends State<NightyOnePage> {
       log("_printTicket Error");
     }
     EasyLoading.dismiss();
-    EasyLoading.dismiss();
   }
 
   @override
   void dispose() {
-    // TODO: implement dispose
     super.dispose();
     EasyLoading.dismiss();
   }

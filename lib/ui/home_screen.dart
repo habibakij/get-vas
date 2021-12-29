@@ -13,14 +13,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-
-
-
-   ShowOilInfoController showOilInfoController =
-      Get.put(ShowOilInfoController());
-
-
-
+  ShowOilInfoController showOilInfoController = Get.put(ShowOilInfoController());
   @override
   Widget build(BuildContext context) {
 
@@ -52,7 +45,9 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
+
       drawer: CustomDrawerTwo(),
+
       body: Container(
         child: Obx(() {
           if (showOilInfoController.loader.value) {
